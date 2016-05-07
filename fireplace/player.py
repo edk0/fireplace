@@ -108,15 +108,15 @@ class Player(Entity, TargetableByAuras):
 	def characters(self):
 		return CardList(chain([self.hero] if self.hero else [], self.field))
 
+	from itertools import chain
+
 	@property
 	def entities(self):
-		for entity in self.field:
-			yield from entity.entities
-		yield from self.secrets
-		yield from self.buffs
-		if self.hero:
-			yield from self.hero.entities
-		yield self
+		return chain(chain.from_iterable(entity.entities for entity in self.field),
+		             self.secrets,
+		             self.buffs,
+		             self.hero.entities if self.hero else (),
+		             (self,))
 
 	@property
 	def live_entities(self):
