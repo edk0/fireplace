@@ -68,6 +68,9 @@ class BaseCard(BaseEntity):
 	def zone(self):
 		return self._zone
 
+	import operator
+	zone = property(operator.attrgetter('_zone'))
+
 	@zone.setter
 	def zone(self, value):
 		self._set_zone(value)
@@ -329,14 +332,13 @@ class LiveEntity(PlayableCard, Entity):
 	incoming_damage_multiplier = int_property("incoming_damage_multiplier")
 	max_health = int_property("max_health")
 
-	def __init__(self, data):
-		super().__init__(data)
-		self._to_be_destroyed = False
-		self.damage = 0
-		self.forgetful = False
-		self.predamage = 0
-		self.turns_in_play = 0
-		self.turn_killed = -1
+	_to_be_destroyed = False
+
+	damage = 0
+	forgetful = False
+	predamage = 0
+	turns_in_play = 0
+	turn_killed = -1
 
 	def _set_zone(self, zone):
 		super()._set_zone(zone)
@@ -406,13 +408,11 @@ class Character(LiveEntity):
 	min_health = boolean_property("min_health")
 	taunt = boolean_property("taunt")
 
-	def __init__(self, data):
-		self.frozen = False
-		self.attack_target = None
-		self.cannot_attack_heroes = False
-		self.num_attacks = 0
-		self.race = Race.INVALID
-		super().__init__(data)
+	frozen = False
+	attack_target = None
+	cannot_attack_heroes = False
+	num_attacks = 0
+	race = Race.INVALID
 
 	@property
 	def events(self):
@@ -498,10 +498,8 @@ class Character(LiveEntity):
 
 
 class Hero(Character):
-	def __init__(self, data):
-		self.armor = 0
-		self.power = None
-		super().__init__(data)
+	armor = 0
+	power = None
 
 	@property
 	def entities(self):
@@ -562,14 +560,12 @@ class Minion(Character):
 		"stealthed", "taunt", "windfury", "cannot_attack_heroes",
 	)
 
-	def __init__(self, data):
-		self.always_wins_brawls = False
-		self.divine_shield = False
-		self.enrage = False
-		self.poisonous = False
-		self.silenced = False
-		self._summon_index = None
-		super().__init__(data)
+	always_wins_brawls = False
+	divine_shield = False
+	enrage = False
+	poisonous = False
+	silenced = False
+	_summon_index = None
 
 	@property
 	def ignore_scripts(self):
