@@ -65,7 +65,7 @@ class BaseEntity(object):
 				if not hasattr(ac, "__iter__"):
 					actions.append(ac)
 				else:
-					actions += action(self, *args)
+					actions += ac
 			else:
 				actions.append(action)
 		source.game.trigger(self, actions, args)
