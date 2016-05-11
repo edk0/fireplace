@@ -60,6 +60,26 @@ JOUST = JoustHelper(
 )
 
 
+class NumHelper(LazyNum):
+	def __init__(self, value):
+		super().__init__()
+		self._value = value
+
+	def evaluate(self, source):
+		if isinstance(self._value, LazyValue):
+			ret = self._value.evaluate(source)
+		else:
+			ret = self._value
+		return self.num(ret)
+
+
+def CHANNEL(target, act):
+	return SpendMana(target, MANA(target)).then(act)
+
+
+CHANNELED_MANA = NumHelper(SpendMana.AMOUNT)
+
+
 def SET(amt):
 	return lambda self, i: amt
 
