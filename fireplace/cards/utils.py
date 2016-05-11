@@ -22,6 +22,9 @@ GiveDivineShield = lambda target: SetTag(target, (GameTag.DIVINE_SHIELD, ))
 GiveWindfury = lambda target: SetTag(target, (GameTag.WINDFURY, ))
 
 
+SpendAllMana = lambda target: SpendMana(target, MANA(target))
+
+
 CLEAVE = Hit(TARGET_ADJACENT, ATK(SELF))
 COINFLIP = RandomNumber(0, 1) == 1
 EMPTY_BOARD = Count(FRIENDLY_MINIONS) == 0
