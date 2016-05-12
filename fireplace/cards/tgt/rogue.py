@@ -62,6 +62,7 @@ class AT_035t:
 
 class AT_034:
 	"Poisoned Blade"
+	events = Activate(CONTROLLER, ID("CS2_083b") | ID("AT_132_ROGUE")).on(Hijack())
 	inspire = Buff(SELF, "AT_034e")
 
 AT_034e = buff(atk=1)

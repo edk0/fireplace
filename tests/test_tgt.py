@@ -1,6 +1,18 @@
 from utils import *
 
 
+def test_poisoned_blade():
+	game = prepare_game(CardClass.ROGUE, CardClass.ROGUE)
+	blade = game.player1.give("AT_034")
+	blade.play()
+	for i in range(2):
+		game.player1.hero.power.use()
+		game.end_turn()
+		game.end_turn()
+	assert not blade.dead
+	assert blade.atk == 1 + 2
+
+
 def test_anubarak():
 	game = prepare_empty_game()
 	anubarak = game.player1.give("AT_036")
