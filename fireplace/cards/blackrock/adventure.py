@@ -24,6 +24,9 @@ class BRMA01_3:
 	tags = {
 		enums.ALWAYS_WINS_BRAWLS: True,
 	}
+	events = Play(ALL_PLAYERS, ID("EX1_407")).on(Hijack(
+		Destroy(ALL_MINIONS - RANDOM(ALL_MINIONS + ALWAYS_WINS_BRAWLS))
+	))
 
 
 class BRMA02_2:

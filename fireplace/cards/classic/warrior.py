@@ -91,11 +91,7 @@ class EX1_400:
 
 class EX1_407:
 	"Brawl"
-	play = (
-		Find(ALL_MINIONS + ALWAYS_WINS_BRAWLS) &
-		Destroy(ALL_MINIONS - RANDOM(ALL_MINIONS + ALWAYS_WINS_BRAWLS)) |
-		Destroy(ALL_MINIONS - RANDOM_MINION)
-	)
+	play = Destroy(ALL_MINIONS - RANDOM_MINION)
 
 
 class EX1_408:
