@@ -75,6 +75,18 @@ def test_baron_rivendare_sylvanas():
 	assert rivendare1.controller != rivendare2.controller
 
 
+def test_baron_rivendare_timing():
+	game = prepare_game()
+	game.player1.temp_mana = 10
+	game.player1.give("EX1_029").play()
+	rivendare = game.player1.give("FP1_031")
+	rivendare.play()
+	game.player1.give("CS2_038").play(target=rivendare)
+	game.player1.give("EX1_029").play()
+	game.player1.give("EX1_312").play()
+	assert game.player2.hero.damage == 4
+
+
 def test_deaths_bite():
 	game = prepare_game()
 	deathsbite = game.player1.give("FP1_021")
