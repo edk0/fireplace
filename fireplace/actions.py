@@ -96,6 +96,17 @@ class IntArg(ActionArg, LazyNum):
 		return self.num(ret)
 
 
+class Interrupt:
+	NONE = 0
+	HIJACK = 1
+
+	def __init__(self, cb):
+		self.callback = cb
+
+	def fire(self, source, args):
+		return self.callback(source, args)
+
+
 class Action(metaclass=ActionMeta):
 	def __init__(self, *args, **kwargs):
 		self._args = args
@@ -125,19 +136,23 @@ class Action(metaclass=ActionMeta):
 		return ret
 
 	def _broadcast(self, entity, source, at, *args):
+		ret = []
 		for event in entity.events:
 			if event.at != at:
 				continue
 			if isinstance(event.trigger, self.__class__) and event.trigger.matches(entity, args):
 				log.info("%r triggers off %r from %r", entity, self, source)
-				entity.trigger_event(source, event, args)
+				ret.append(entity.trigger_event(source, event, args))
+		return ret
 
 	def broadcast(self, source, at, *args):
-		for entity in source.game.entities:
-			self._broadcast(entity, source, at, *args)
-
-		for entity in source.game.hands:
-			self._broadcast(entity, source, at, *args)
+		ret = []
+		ret += [self._broadcast(entity, source, at, *args) for entity in source.game.entities]
+		ret += [self._broadcast(entity, source, at, *args) for entity in source.game.hands]
+		for v in (c for a in ret or () for b in a or () for c in b or ()):
+			if isinstance(v, Interrupt):
+				return v
+		return None
 
 	def queue_broadcast(self, obj, args):
 		self.event_queue.append((obj, args))
@@ -173,7 +188,28 @@ class Action(metaclass=ActionMeta):
 class GameAction(Action):
 	def trigger(self, source):
 		args = self.get_args(source)
-		self.do(source, *args)
+		return self.do(source, *args)
+
+
+class Hijack(GameAction):
+	ACTIONS = ActionArg()
+
+	def get_args(self, source):
+		if len(self._args) < 1:
+			return [[]]
+		arg = self._args[0]
+		if hasattr(arg, "__iter__"):
+			return [arg]
+		else:
+			return [[arg]]
+
+	def interrupt(self, source, actions, event_args):
+		for a in actions:
+			source.game.queue_actions(source, [a], event_args)
+		return Interrupt.HIJACK
+
+	def do(self, source, actions):
+		return Interrupt(lambda src, args: self.interrupt(src, actions, args))
 
 
 class Attack(GameAction):
@@ -413,13 +449,18 @@ class Play(GameAction):
 
 		if card.type in (CardType.MINION, CardType.WEAPON):
 			self.queue_broadcast(summon_action, (player, EventListener.ON, player, card))
-		self.broadcast(player, EventListener.ON, player, card, target)
+
+		interrupt = self.broadcast(player, EventListener.ON, player, card, target)
+
 		self.resolve_broadcasts()
+
+		interrupt = interrupt and interrupt.fire(card, [player, card, target])
 
 		# "Can't Play" (aka Counter) means triggers don't happen either
 		if not card.cant_play:
-			battlecry_card = choose or card
-			source.game.queue_actions(card, [Battlecry(battlecry_card, card.target)])
+			if interrupt != Interrupt.HIJACK:
+				battlecry_card = choose or card
+				source.game.queue_actions(card, [Battlecry(battlecry_card, card.target)])
 
 			# If the play action transforms the card (eg. Druid of the Claw), we
 			# have to broadcast the morph result as minion instead.
@@ -447,10 +488,12 @@ class Activate(GameAction):
 		return (source, ) + super().get_args(source)
 
 	def do(self, source, player, heropower, target=None):
-		self.broadcast(source, EventListener.ON, player, heropower, target)
+		interrupt = self.broadcast(source, EventListener.ON, player, heropower, target)
+		interrupt = interrupt and interrupt.fire(source, [player, heropower, target])
 
-		actions = heropower.get_actions("activate")
-		source.game.main_power(heropower, actions, target)
+		if interrupt != Interrupt.HIJACK:
+			actions = heropower.get_actions("activate")
+			source.game.main_power(heropower, actions, target)
 
 		for minion in player.field.filter(has_inspire=True):
 			actions = minion.get_actions("inspire")
