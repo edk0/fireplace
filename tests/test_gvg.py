@@ -630,6 +630,16 @@ def test_malorne():
 		assert len(game.player1.hand) == 1
 
 
+def test_malorne_resurrect():
+	game = prepare_game()
+	malorne = game.player1.give("GVG_035")
+	malorne.play()
+	malorne.destroy()
+	# Malorne died this game, should be resurrectable.
+	game.player1.give("BRM_017").play()
+	assert len(game.player1.field) == 1
+
+
 def test_malorne_slam():
 	game = prepare_game()
 	malorne = game.player1.give("GVG_035")
